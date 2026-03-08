@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  HR_ADMIN
+  HR_EXECUTIVE
+  MANAGER
+  INTERN
+  EMPLOYEE
+}
+
+enum CandidateStage {
+  APPLIED
+  SCREENING
+  INTERVIEW
+  SELECTED
+  REJECTED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  REMOTE
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REWORK_REQUIRED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  role      UserRole
+  phone     String?
+  createdAt DateTime @default(now())
+
+  candidate      Candidate?
+  employee       Employee?
+  managedProjects Project[] @relation("ProjectManager")
+  assignedTasks  Task[]     @relation("TaskAssignee")
+  leaveRequests  LeaveRequest[]
+  attendance     Attendance[]
+}
+
+model JobPosting {
+  id                 Int      @id @default(autoincrement())
+  title              String
+  description        String
+  requiredSkills     String
+  internshipDuration String
+  location           String
+  createdAt          DateTime @default(now())
+  applications       Candidate[]
+}
+
+model Candidate {
+  id             Int            @id @default(autoincrement())
+  name           String
+  email          String         @unique
+  phone          String
+  resumeUrl      String
+  skills         String
+  stage          CandidateStage @default(APPLIED)
+  feedback       String?
+  interviewDate  DateTime?
+  interviewLink  String?
+  offerLetterUrl String?
+  createdAt      DateTime       @default(now())
+
+  jobId  Int
+  job    JobPosting @relation(fields: [jobId], references: [id])
+
+  userId Int?  @unique
+  user   User? @relation(fields: [userId], references: [id])
+}
+
+model Employee {
+  id                 Int      @id @default(autoincrement())
+  department         String
+  designation        String
+  joiningDate        DateTime
+  internshipDuration String?
+  createdAt          DateTime @default(now())
+
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+
+  documents   Document[]
+  submissions Submission[]
+}
+
+model Document {
+  id         Int      @id @default(autoincrement())
+  type       String
+  fileUrl    String
+  uploadedAt DateTime @default(now())
+
+  employeeId Int
+  employee   Employee @relation(fields: [employeeId], references: [id])
+}
+
+model Attendance {
+  id          Int              @id @default(autoincrement())
+  date        DateTime
+  checkIn     DateTime
+  checkOut    DateTime?
+  status      AttendanceStatus
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+}
+
+model LeaveRequest {
+  id        Int         @id @default(autoincrement())
+  reason    String
+  startDate DateTime
+  endDate   DateTime
+  status    LeaveStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  startDate   DateTime
+  endDate     DateTime
+  createdAt   DateTime @default(now())
+
+  managerId Int
+  manager   User @relation("ProjectManager", fields: [managerId], references: [id])
+
+  tasks Task[]
+}
+
+model Task {
+  id           Int          @id @default(autoincrement())
+  name         String
+  description  String
+  deadline     DateTime
+  status       TaskStatus   @default(NOT_STARTED)
+  reviewStatus ReviewStatus @default(PENDING)
+  createdAt    DateTime     @default(now())
+
+  projectId Int
+  project   Project @relation(fields: [projectId], references: [id])
+
+  assigneeId Int
+  assignee   User @relation("TaskAssignee", fields: [assigneeId], references: [id])
+
+  submissions Submission[]
+}
+
+model Submission {
+  id         Int      @id @default(autoincrement())
+  fileUrl    String
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  taskId Int
+  task   Task @relation(fields: [taskId], references: [id])
+
+  employeeId Int
+  employee   Employee @relation(fields: [employeeId], references: [id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  channel   String
+  message   String
+  createdAt DateTime @default(now())
+  sentTo    String
+}
