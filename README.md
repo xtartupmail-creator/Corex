@@ -71,6 +71,11 @@ VITE_API_URL=http://localhost:4000/api
 - Stage-wise candidate funnel analytics with conversion and drop-off KPIs
 - Kanban-ready candidate endpoint with live search filters for faster recruiter throughput
 
+### UI/UX Enhancements
+- Glassmorphism-based enterprise dashboard shell (sidebar + command center top bar)
+- Gradient accent system across KPI cards, alerts, and pipeline views
+- Multi-view navigation for Executive Overview, Hiring Funnel, Intern Projects, and Compliance
+
 ## API Base
 
 All endpoints are under: `/api`
